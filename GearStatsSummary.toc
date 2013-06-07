@@ -1,0 +1,18 @@
+## Interface: 50300
+## Notes: Compare your equipments bonus of all status with other players.
+## Notes-zhCN: 与观察目标的装备属性进行比较
+## Notes-zhTW: 與觀察目標的裝備屬性進行比較
+## Author-Origin: slashboy @ 九藜方舟 Dreamland  yyslash@gmail.com / lasthime @ 幻物梵天 艾森纳 
+## Author: Henrui @ 幽暗沼泽 zhengruiw02@gmail.com 
+## Title: cff00ff00GearStatsSummary|r
+## Title-zhCN: cff00ff00GearStatsSummary|r 
+## Title-zhTW: cff00ff00GearStatsSummary|r 
+## Version: GSS_release 1
+
+embeds.xml
+
+Localization.lua
+RatingSummary.xml
+
+
+

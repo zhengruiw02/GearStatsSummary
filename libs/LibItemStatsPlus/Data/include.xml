@@ -1,0 +1,12 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	<Script file="CombatRatings.lua"/>
+	<Script file="CritBase.lua"/>
+	<Script file="DataLibStatLogic.lua"/>
+	<Script file="HPPerSta.lua"/>
+	<Script file="MasteryCoefficients.lua"/>
+	<Script file="MeleeCrit.lua"/>
+	<Script file="MPPerSpt.lua"/>
+	<Script file="SpellCrit.lua"/>
+	<Script file="UpgradeLevels.lua"/>
+</Ui>
