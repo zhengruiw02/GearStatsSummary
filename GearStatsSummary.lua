@@ -466,7 +466,7 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 			
 			for k,v in pairs(stats) do --newitemStat
 			--if i == INVSLOT_MAINHAND then print(k..":"..v) end
-				if(k~="itemType" and k~="link" and k~="Gems" and k~="Enchanted" and k~="Set") then
+				if(k~="itemType" and k~="link" and k~="Gems" and k~="Enchanted") then
 					--if (k=="ITEM_MOD_STAMINA_SHORT") then print(v) end
 					if(not sum[k]) then sum[k] = 0 end
 					sum[k] = sum[k] + v;
@@ -494,21 +494,9 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 				end
 			end
 			
-			if (stats["Set"] ~= nil) then
-				for k,v in pairs(stats["Set"]) do
-					if sum["Set"] == nil then sum["Set"] = {} end
-					if sum["Set"][k] == nil then sum["Set"][k] = v end
-				end
-			end
-			
 		end
 	end
 
-	if sum["Set"]~=nil then
-		for k,v in pairs(sum["Set"]) do
-			sum["ITEM_MOD_PVP_POWER_SHORT"] = sum["ITEM_MOD_PVP_POWER_SHORT"] + v
-		end
-	end
 	return sum;
 end
 

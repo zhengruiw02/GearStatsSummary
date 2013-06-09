@@ -34,10 +34,6 @@
 								["ExtraSlot"] = value, -- nil or 1 
 							}
 				["Enchanted"] = value, -- nil or 1
-				["Set"] = 	{	[settext1] =  value, --designed for pvp power only
-								[settext2] =  value,
-								...
-							}
 			}
 	
 ]]
@@ -180,23 +176,6 @@ function ParseLine(stats, text, r, g, b)
 	end
 	if strfind(strsub(text, 1, 10), "|c%x%x%x%x%x%x%x%x") then
 		text = strsub(text, 11)
-	end
-
-	--sets stats
-	local found = string.find(text, ITEM_SET_BONUS:gsub("%%s",""));
-	if found and (r==0 and ceil(g)==1 and b==0) then
-	--print(text)
-		local statName = "ITEM_MOD_PVP_POWER_SHORT"
-		local statNameText = StatList[statName]
-		found = string.find(string.upper(text), string.upper(statNameText));
-		if found then
-			local found, _, value = string.find(text, ".-("..patDecimal..").*");
-			if found then
-				if stats["Set"] == nil then stats["Set"] = {} end
-				stats["Set"][text] = value:gsub(",","")
-			end
-		end
-		return stats
 	end
 
 	--dual stats
