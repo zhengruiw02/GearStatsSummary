@@ -24,6 +24,22 @@
 	value = lib:GetMPFromSpt(value, classid)
 	value = lib:GetHPFromSta(value, level)
 	
+	Struct for every gears stats
+	
+	stats = {	[statName1] = value,
+				[statName2] = value,
+				... 
+				["Gems"] = 	{	["GemSlotCount"] = value,
+								["EmptyGemSlotCount"] = value,
+								["ExtraSlot"] = value, -- nil or 1 
+							}
+				["Enchanted"] = value, -- nil or 1
+				["Set"] = 	{	[settext1] =  value, --designed for pvp power only
+								[settext2] =  value,
+								...
+							}
+			}
+	
 ]]
 local _, ns = ...
 local MAJOR = "LibItemStatsPlus";
@@ -158,12 +174,29 @@ end
 
 function ParseLine(stats, text, r, g, b)
 	text = strtrim(text)
-	if (floor(r*1000)==floor(128/255*1000)) then return stats end --if color is grey then do nothing
+	if (ceil(r*255)==128) then return stats end --if color is grey then do nothing
 	if strsub(text, -2) == "|r" then
 		text = strsub(text, 1, -3)
 	end
 	if strfind(strsub(text, 1, 10), "|c%x%x%x%x%x%x%x%x") then
 		text = strsub(text, 11)
+	end
+
+	--sets stats
+	local found = string.find(text, ITEM_SET_BONUS:gsub("%%s",""));
+	if found and (r==0 and ceil(g)==1 and b==0) then
+	--print(text)
+		local statName = "ITEM_MOD_PVP_POWER_SHORT"
+		local statNameText = StatList[statName]
+		found = string.find(string.upper(text), string.upper(statNameText));
+		if found then
+			local found, _, value = string.find(text, ".-("..patDecimal..").*");
+			if found then
+				if stats["Set"] == nil then stats["Set"] = {} end
+				stats["Set"][text] = value:gsub(",","")
+			end
+		end
+		return stats
 	end
 
 	--dual stats
@@ -198,6 +231,7 @@ function ParseLine(stats, text, r, g, b)
 		end
 		return stats
 	end
+	
 	return stats
 end
 

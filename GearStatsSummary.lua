@@ -12,29 +12,29 @@ local function SetOrHookScript(frame, scriptName, func)
 	end
 end
 
-function RatingSummary_OnLoad(self)
+function GearStatsSummary_OnLoad(self)
 	self:RegisterEvent("VARIABLES_LOADED");
 	self:RegisterEvent("ADDON_LOADED");
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED");
 
-	InspectLess:RegisterCallback("InspectLess_InspectItemReady", RatingSummary_InspectItemReady)
-	InspectLess:RegisterCallback("InspectLess_InspectReady", RatingSummary_InspectReady)
-	SetOrHookScript(GearManagerDialogPopup, "OnShow", RatingSummary_InspectFrame_OnHide)
+	InspectLess:RegisterCallback("InspectLess_InspectItemReady", GearStatsSummary_InspectItemReady)
+	InspectLess:RegisterCallback("InspectLess_InspectReady", GearStatsSummary_InspectReady)
+	SetOrHookScript(GearManagerDialogPopup, "OnShow", GearStatsSummary_InspectFrame_OnHide)
 	if CoreDependCall then
 		CoreDependCall("Blizzard_TradeSkillUI", function()
-			SetOrHookScript(TradeSkillFrame, "OnShow", RatingSummary_InspectFrame_OnHide)
+			SetOrHookScript(TradeSkillFrame, "OnShow", GearStatsSummary_InspectFrame_OnHide)
 		end)
 	end
 end
 
-function RatingSummary_SetupHook()
-	hooksecurefunc("InspectPaperDollFrame_OnShow", RatingSummary_InspectFrame_SetGuild);
-	SetOrHookScript(InspectFrame, "OnShow", RatingSummary_InspectFrame_SetGuild);
-	SetOrHookScript(InspectFrame, "OnHide", RatingSummary_InspectFrame_OnHide);
-	hooksecurefunc("InspectFrame_UnitChanged", RatingSummary_InspectFrame_UnitChanged);
+function GearStatsSummary_SetupHook()
+	hooksecurefunc("InspectPaperDollFrame_OnShow", GearStatsSummary_InspectFrame);
+	SetOrHookScript(InspectFrame, "OnShow", GearStatsSummary_InspectFrame);
+	SetOrHookScript(InspectFrame, "OnHide", GearStatsSummary_InspectFrame_OnHide);
+	hooksecurefunc("InspectFrame_UnitChanged", GearStatsSummary_InspectFrame_UnitChanged);
 end
 
-function RatingSummary_UpdateAnchor(doll, insp)
+function GearStatsSummary_UpdateAnchor(doll, insp)
 	if not doll then doll = PaperDollFrame:IsVisible() elseif doll<0 then doll = nil end
 	if not insp then insp = InspectFrame and InspectFrame:IsVisible() elseif insp<0 then insp = nil end
 
@@ -54,33 +54,33 @@ function RatingSummary_UpdateAnchor(doll, insp)
 	elseif IsAddOnLoaded("Tukui") then
 		E = 2
 	end
-	if RatingSummaryTargetFrame:IsVisible() then
-		RatingSummarySelfFrame:ClearAllPoints()
-		RatingSummarySelfFrame:SetPoint("TOPLEFT", RatingSummaryTargetFrame, "TOPRIGHT", E and 2 or 0, 0)
+	if GearStatsSummaryTargetFrame:IsVisible() then
+		GearStatsSummarySelfFrame:ClearAllPoints()
+		GearStatsSummarySelfFrame:SetPoint("TOPLEFT", GearStatsSummaryTargetFrame, "TOPRIGHT", E and 2 or 0, 0)
 		if E~= nil then
-			RatingSummarySelfFrame:SetTemplate("Transparent")
-			RatingSummaryTargetFrame:SetFrameLevel(CharacterFrame:GetFrameLevel())
+			GearStatsSummarySelfFrame:SetTemplate("Transparent")
+			GearStatsSummaryTargetFrame:SetFrameLevel(CharacterFrame:GetFrameLevel())
 			if E == 1 then
-				unpack(ElvUI).Skins:HandleCloseButton(RatingSummarySelfFrameCloseButton)
-				unpack(ElvUI).Skins:HandleCloseButton(RatingSummaryTargetFrameCloseButton)
+				unpack(ElvUI).Skins:HandleCloseButton(GearStatsSummarySelfFrameCloseButton)
+				unpack(ElvUI).Skins:HandleCloseButton(GearStatsSummaryTargetFrameCloseButton)
 			else
-				RatingSummarySelfFrameCloseButton:SkinCloseButton()
-				RatingSummaryTargetFrameCloseButton:SkinCloseButton()
+				GearStatsSummarySelfFrameCloseButton:SkinCloseButton()
+				GearStatsSummaryTargetFrameCloseButton:SkinCloseButton()
 			end
-			RatingSummaryTargetFrame:SetTemplate("Transparent")
+			GearStatsSummaryTargetFrame:SetTemplate("Transparent")
 		end
-		af = RatingSummaryTargetFrame
-	elseif RatingSummarySelfFrame:IsVisible() then
+		af = GearStatsSummaryTargetFrame
+	elseif GearStatsSummarySelfFrame:IsVisible() then
 		if E~= nil then
-			RatingSummarySelfFrame:SetFrameLevel(CharacterFrame:GetFrameLevel())
+			GearStatsSummarySelfFrame:SetFrameLevel(CharacterFrame:GetFrameLevel())
 			if E == 1 then
-				unpack(ElvUI).Skins:HandleCloseButton(RatingSummarySelfFrameCloseButton)
+				unpack(ElvUI).Skins:HandleCloseButton(GearStatsSummarySelfFrameCloseButton)
 			else
-				RatingSummarySelfFrameCloseButton:SkinCloseButton()
+				GearStatsSummarySelfFrameCloseButton:SkinCloseButton()
 			end
-			RatingSummarySelfFrame:SetTemplate("Transparent")
+			GearStatsSummarySelfFrame:SetTemplate("Transparent")
 		end
-		af = RatingSummarySelfFrame
+		af = GearStatsSummarySelfFrame
 	end
 
 	if(at and af) then
@@ -90,77 +90,69 @@ function RatingSummary_UpdateAnchor(doll, insp)
 
 end
 
-function RatingSummary_OnEvent(self, event, ...)
+function GearStatsSummary_OnEvent(self, event, ...)
 	local arg1, arg2, arg3 = ...;
 
 	if event == "VARIABLES_LOADED" then
 		if RATING_SUMMARY_ANNOUNCE then DEFAULT_CHAT_FRAME:AddMessage(RATING_SUMMARY_ANNOUNCE) end
-		--RatingSummarySelfFrame:SetScale(0.90)
-		--RatingSummaryTargetFrame:SetScale(0.90)
+		--GearStatsSummarySelfFrame:SetScale(0.90)
+		--GearStatsSummaryTargetFrame:SetScale(0.90)
 
-		SetOrHookScript(PaperDollFrame, "OnShow", RatingSummary_PaperDollFrame_OnShow);
-		SetOrHookScript(PaperDollFrame, "OnHide", RatingSummary_PaperDollFrame_OnHide);
+		SetOrHookScript(PaperDollFrame, "OnShow", GearStatsSummary_PaperDollFrame_OnShow);
+		SetOrHookScript(PaperDollFrame, "OnHide", GearStatsSummary_PaperDollFrame_OnHide);
 	end
 
 	if event == "ADDON_LOADED" and arg1=="Blizzard_InspectUI" then
-		RatingSummary_SetupHook();
+		GearStatsSummary_SetupHook();
 	end
 
-	if  event == "UNIT_INVENTORY_CHANGED" then
-		if ((arg1 == "player") and RatingSummarySelfFrame:IsVisible()) then
-			RatingSummary_HideFrame(RatingSummarySelfFrame);
-			if (RatingSummaryTargetFrame:IsVisible()) then
-				RatingSummary_ShowFrame(RatingSummarySelfFrame,RatingSummaryTargetFrame,UnitName("player"),0,0);
+	if event == "UNIT_INVENTORY_CHANGED" then
+		if ((arg1 == "player") and GearStatsSummarySelfFrame:IsVisible()) then
+			GearStatsSummary_HideFrame(GearStatsSummarySelfFrame);
+			if (GearStatsSummaryTargetFrame:IsVisible()) then
+				GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,GearStatsSummaryTargetFrame,UnitName("player"),0,0);
 			else
-				RatingSummary_ShowFrame(RatingSummarySelfFrame,PaperDollFrame,UnitName("player"),OFFSET_X,OFFSET_Y);
+				GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,PaperDollFrame,UnitName("player"),OFFSET_X,OFFSET_Y);
 			end
-		elseif ( InspectFrame and InspectFrame:IsVisible() and arg1 == InspectFrame.unit and RatingSummaryTargetFrame:IsVisible()) then
-			RatingSummary_HideFrame(RatingSummaryTargetFrame);
-			RatingSummary_ShowFrame(RatingSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y);
-			RatingSummary_ShowFrame(RatingSummarySelfFrame,RatingSummaryTargetFrame,UnitName("player"),0,0);
+		elseif ( InspectFrame and InspectFrame:IsVisible() and arg1 == InspectFrame.unit and GearStatsSummaryTargetFrame:IsVisible()) then
+			GearStatsSummary_HideFrame(GearStatsSummaryTargetFrame);
+			GearStatsSummary_ShowFrame(GearStatsSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y);
+			GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,GearStatsSummaryTargetFrame,UnitName("player"),0,0);
 		end
 	end
 end
 
-function RatingSummary_PaperDollFrame_OnShow()
+function GearStatsSummary_PaperDollFrame_OnShow()
 	if not InspectFrame or not InspectFrame:IsVisible() then
-		RatingSummary_ShowFrame(RatingSummarySelfFrame,PaperDollFrame,UnitName("player"),OFFSET_X,OFFSET_Y);
+		GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,PaperDollFrame,UnitName("player"),OFFSET_X,OFFSET_Y);
 	end
-	RatingSummary_UpdateAnchor(1)
+	GearStatsSummary_UpdateAnchor(1)
 end
 
-function RatingSummary_PaperDollFrame_OnHide()
+function GearStatsSummary_PaperDollFrame_OnHide()
 	if not InspectFrame or not InspectFrame:IsVisible() then
-		RatingSummary_HideFrame(RatingSummarySelfFrame);
+		GearStatsSummary_HideFrame(GearStatsSummarySelfFrame);
 	end
-	RatingSummary_UpdateAnchor(-1)
+	GearStatsSummary_UpdateAnchor(-1)
 end
 
-function RatingSummary_InspectFrame_SetGuild(self)
+function GearStatsSummary_InspectFrame(self)
 	if not self.unit then return end
-	--print("RatingSummary_InspectFrame_SetGuild called")
 	if InspectLess:IsDone() and InspectLess:GetGUID()==UnitGUID(self.unit) then
-		RatingSummary_InspectItemReady("InspectLess_InspectItemReady", self.unit, InspectLess:GetGUID(), InspectLess:IsDone());
-	end
-	local guild, level, levelid = GetGuildInfo(self.unit)
-	if(guild) then
-		InspectTitleText:Show();
-		InspectTitleText:SetText("<"..guild.."> "..level.." ["..levelid.."]"); -- edited
-	else
-		InspectTitleText:SetText("");
+		GearStatsSummary_InspectItemReady("InspectLess_InspectItemReady", self.unit, InspectLess:GetGUID(), InspectLess:IsDone());
 	end
 end
 
-function RatingSummary_InspectItemReady(event, unit, guid, ready)
+function GearStatsSummary_InspectItemReady(event, unit, guid, ready)
 	if(not InspectFrame or not InspectFrame:IsVisible()) then return end;
-	RatingSummary_ShowFrame(RatingSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y,ready);
-	RatingSummary_ShowFrame(RatingSummarySelfFrame,RatingSummaryTargetFrame,UnitName("player"),0,0);
-	RatingSummary_UpdateAnchor(nil, 1, nil)
+	GearStatsSummary_ShowFrame(GearStatsSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y,ready);
+	GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,GearStatsSummaryTargetFrame,UnitName("player"),0,0);
+	GearStatsSummary_UpdateAnchor(nil, 1, nil)
 end
 
-function RatingSummary_InspectReady(event, unit, guid, done)
+function GearStatsSummary_InspectReady(event, unit, guid, done)
 	if done then
-		local frame = RatingSummaryTargetFrame;
+		local frame = GearStatsSummaryTargetFrame;
 
 		if frame:IsVisible() and not frame.talented then
 			local tiptext = getglobal(frame:GetName().."Text"):GetText();
@@ -170,27 +162,27 @@ function RatingSummary_InspectReady(event, unit, guid, done)
 			talent = talent and talent>0 and select(2, GetSpecializationInfoByID(talent))
 			if talent then tiptext = tiptext:gsub("([^\n]*"..RATING_SUMMARY_ITEM_LEVEL_SHORT.."：".."[^\n]*)", "%1 ("..select(2, GetSpecializationInfo(talent, true)).." ) ") end
 
-			tiptext = tiptext.."\n\n"..RatingSummary_GetTalentString(true)
+			tiptext = tiptext.."\n\n"..GearStatsSummary_GetTalentString(true)
 			frame.talented = true;
-			RatingSummary_SetFrameText(frame, nil, tiptext, InspectFrame.unit);
+			GearStatsSummary_SetFrameText(frame, nil, tiptext, InspectFrame.unit);
 		end
 	end
 end
-function RatingSummary_InspectFrame_OnHide()
-	RatingSummary_HideFrame(RatingSummaryTargetFrame);
-	RatingSummary_HideFrame(RatingSummarySelfFrame);
-	RatingSummary_UpdateAnchor(nil, -1, nil)
+function GearStatsSummary_InspectFrame_OnHide()
+	GearStatsSummary_HideFrame(GearStatsSummaryTargetFrame);
+	GearStatsSummary_HideFrame(GearStatsSummarySelfFrame);
+	GearStatsSummary_UpdateAnchor(nil, -1, nil)
 end
 
-function RatingSummary_InspectFrame_UnitChanged()
-	if ( InspectFrame and InspectFrame:IsVisible() and RatingSummaryTargetFrame:IsVisible()) then
-		RatingSummary_HideFrame(RatingSummaryTargetFrame);
-		RatingSummary_ShowFrame(RatingSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y);
-		RatingSummary_ShowFrame(RatingSummarySelfFrame,RatingSummaryTargetFrame,UnitName("player"),0,0);
+function GearStatsSummary_InspectFrame_UnitChanged()
+	if ( InspectFrame and InspectFrame:IsVisible() and GearStatsSummaryTargetFrame:IsVisible()) then
+		GearStatsSummary_HideFrame(GearStatsSummaryTargetFrame);
+		GearStatsSummary_ShowFrame(GearStatsSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y);
+		GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,GearStatsSummaryTargetFrame,UnitName("player"),0,0);
 	end
 end
 
-function RatingSummary_GetTalentString(isInspecting)
+function GearStatsSummary_GetTalentString(isInspecting)
 	local active, inact
 
 	if(isInspecting)then
@@ -233,7 +225,7 @@ function RS_GetTalentFormat(active , inact)
 	end
 end
 
-function RatingSummary_SetFrameText(frame, tiptitle, tiptext, unit)
+function GearStatsSummary_SetFrameText(frame, tiptitle, tiptext, unit)
 
 	local text = getglobal(frame:GetName().."Text");
 	local title = getglobal(frame:GetName().."Title");
@@ -285,9 +277,9 @@ local ArmorBonusForSpec = {
 		HUNTER = "AGI",
 	},
 }
-function RatingSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
+function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	local unit = "player";
-	if(RatingSummaryTargetFrame == frame) then
+	if(GearStatsSummaryTargetFrame == frame) then
 		if(InspectFrame.unit) then
 			unit = InspectFrame.unit;
 		else
@@ -295,7 +287,7 @@ function RatingSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 		end
 	end
 	local inspecting = unit~="player"
-	local sum = RatingSummary_Sum(inspecting);
+	local sum = GearStatsSummary_Sum(inspecting);
 	local uclocale, uc, ucindex = UnitClass(unit)
 	local _, ur = UnitRace(unit)
 	local ul = UnitLevel(unit)
@@ -313,9 +305,9 @@ function RatingSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 		local role = GetSpecializationRoleByID(spec)
 	end]]
 	if not inspecting then
-		active, inact = RatingSummary_GetTalentString(false);
+		active, inact = GearStatsSummary_GetTalentString(false);
 	elseif ready then
-		active = RatingSummary_GetTalentString(true);
+		active = GearStatsSummary_GetTalentString(true);
 	end
 	
 	--DevTools_Dump(sum);
@@ -327,36 +319,17 @@ function RatingSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	color = HIGHLIGHT_FONT_COLOR_CODE
 	if(avgLevel and avgLevel>0) then
 		tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LEVEL_SHORT.."："..FONT_COLOR_CODE_CLOSE..color..format("%.1f",avgLevel)..FONT_COLOR_CODE_CLOSE
-		if IsAddOnLoaded("GearScoreLite") then
-			local score = GearScore_GetScore(UnitName(unit), unit) or "no_cache"
-			if type(score)=="number" then
-				r,g,b = GearScore_GetQuality(score)
-				color = "|cff"..string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
-			end
-			tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE.." GS ".."："..FONT_COLOR_CODE_CLOSE..color..score..FONT_COLOR_CODE_CLOSE
-		elseif GearScoreL then
-			local score, gs_color = GearScoreL:GetPlayerInfo(unit)
-			tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE.." GS ".."："..FONT_COLOR_CODE_CLOSE.."|cff"..color..score..FONT_COLOR_CODE_CLOSE
-		elseif IsAddOnLoaded("GearScore") and not inspecting then
-			local score = TenTonHammer.PlayerInfo['GearScore'] or "no_cache"
-			if type(score)=="number" then
-				_, _, _, color = TenTonHammer:GetColor(score)
-			else
-				color = "|cff"..color
-			end
-			tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE.." GS ".."："..FONT_COLOR_CODE_CLOSE..color..score..FONT_COLOR_CODE_CLOSE
-		end
 	end
 	
 	tiptext=tiptext.."\n\n"..NORMAL_FONT_COLOR_CODE..RS_STATS_ONLY_FROM_GEARS..FONT_COLOR_CODE_CLOSE
 
 	local cat, v;
 	local Catalog;
-	if spec~=nil and RatingSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]] ~= nil then
-		Catalog = RatingSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]];
+	if spec~=nil and GearStatsSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]] ~= nil then
+		Catalog = GearStatsSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]];
 		--print(spec - SpecIDToSpecIndex[ucindex])
 		if sum.ArmorBonus ~= nil then
-			local ABS = RatingSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]][2]
+			local ABS = GearStatsSummary_CLASS_STAT[uc][spec - SpecIDToSpecIndex[ucindex]][2]
 			ABS = ArmorBonusForSpec[ABS][uc]
 			ABS = StatToStatName[ABS]
 			--print(sum[ABS])
@@ -366,23 +339,23 @@ function RatingSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 			--print(sum[ABS])
 		end
 	else
-		Catalog = RatingSummary_CLASS_STAT["ALL"]
+		Catalog = GearStatsSummary_CLASS_STAT["ALL"]
 		--print("Catalog")
 		spec = 0
 	end
 	--print(spec.." "..(spec - SpecIDToSpecIndex[ucindex]))
 	for _, cat in pairs(Catalog) do
 		local catStr = "";
-		for _, stat in pairs(RatingSummary_STAT[cat]) do
+		for _, stat in pairs(GearStatsSummary_STAT[cat]) do
 			--ChatFrame1:AddMessage(stat);
-			local func = RatingSummary_Calc[stat]
+			local func = GearStatsSummary_Calc[stat]
 			local s1,s2,s3,s4;
 			if not func then
 				s1 = sum[StatToStatName[stat]] or 0
 			else
 				s1,s2,s3,s4 = func(sum, StatToStatName[stat], sum[StatToStatName[stat]] or 0, uc, ul, spec)
 			end
-			local ff = RatingSummary_FORMAT[stat] or GREEN_FONT_COLOR_CODE.."%d"..FONT_COLOR_CODE_CLOSE;
+			local ff = GearStatsSummary_FORMAT[stat] or GREEN_FONT_COLOR_CODE.."%d"..FONT_COLOR_CODE_CLOSE;
 			if(type(s1)~="number") then
 				--ChatFrame1:AddMessage(stat..":"..tostring(s1))
 			elseif(s1 and s1>0) then
@@ -401,7 +374,7 @@ function RatingSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 		end
 		if catStr ~="" then
 			if tiptext ~= "" then tiptext = tiptext.."\n"; end
-			tiptext = tiptext.."\n"..HIGHLIGHT_FONT_COLOR_CODE..(RatingSummary_STATS_CAT[cat] or cat)..":"..FONT_COLOR_CODE_CLOSE;
+			tiptext = tiptext.."\n"..HIGHLIGHT_FONT_COLOR_CODE..(GearStatsSummary_STATS_CAT[cat] or cat)..":"..FONT_COLOR_CODE_CLOSE;
 			tiptext = tiptext..catStr;
 		end
 	end
@@ -436,18 +409,18 @@ function RatingSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	else
 		frame.talented=false;
 	end
-	RatingSummary_SetFrameText(frame, tiptitle, tiptext, unit);
+	GearStatsSummary_SetFrameText(frame, tiptitle, tiptext, unit);
 	frame:Show();
 end
 
-function RatingSummary_HideFrame(frame)
+function GearStatsSummary_HideFrame(frame)
 	frame:Hide();
 end
 
 local ClassArmorBonus = 
 { 5, 5, 4, 3, 2, 5, 4, 2, 2, 3, 3,}
 -- 2=布甲,3=皮甲,4=鎖甲,5=鎧甲
-function RatingSummary_Sum(inspecting, tipUnit)
+function GearStatsSummary_Sum(inspecting, tipUnit)
 	--local slotID;
 	--[[ 0 = ammo 1 = head 2 = neck 3 = shoulder 4 = shirt 5 = chest 6 = belt 7 = legs 8 = feet 9 = wrist 10 = gloves 11 = finger 1 12 = finger 2 13 = trinket 1 14 = trinket 2 15 = back 16 = main hand 17 = off hand 18 = ranged 19 = tabard ]]--
 
@@ -493,14 +466,14 @@ function RatingSummary_Sum(inspecting, tipUnit)
 			
 			for k,v in pairs(stats) do --newitemStat
 			--if i == INVSLOT_MAINHAND then print(k..":"..v) end
-				if(k~="itemType" and k~="link" and k~="Gems" and k~="Enchanted") then
+				if(k~="itemType" and k~="link" and k~="Gems" and k~="Enchanted" and k~="Set") then
 					--if (k=="ITEM_MOD_STAMINA_SHORT") then print(v) end
 					if(not sum[k]) then sum[k] = 0 end
 					sum[k] = sum[k] + v;
 				end
 			end
 			
-			if(stats["Gems"] ~= nil) then
+			if (stats["Gems"] ~= nil) then
 				if sum["Gems"] == nil then sum["Gems"] = {} end
 				for k,v in pairs(stats["Gems"]) do
 					if sum["Gems"][k] == nil then sum["Gems"][k] = 0 end
@@ -520,14 +493,26 @@ function RatingSummary_Sum(inspecting, tipUnit)
 					end
 				end
 			end
-
+			
+			if (stats["Set"] ~= nil) then
+				for k,v in pairs(stats["Set"]) do
+					if sum["Set"] == nil then sum["Set"] = {} end
+					if sum["Set"][k] == nil then sum["Set"][k] = v end
+				end
+			end
+			
 		end
 	end
 
+	if sum["Set"]~=nil then
+		for k,v in pairs(sum["Set"]) do
+			sum["ITEM_MOD_PVP_POWER_SHORT"] = sum["ITEM_MOD_PVP_POWER_SHORT"] + v
+		end
+	end
 	return sum;
 end
 
-RatingSummary_STATS_CAT = {
+GearStatsSummary_STATS_CAT = {
 	BASE = PLAYERSTAT_BASE_STATS,
 	MELEE = PLAYERSTAT_MELEE_COMBAT,
 	RANGED = PLAYERSTAT_RANGED_COMBAT,
@@ -536,7 +521,7 @@ RatingSummary_STATS_CAT = {
 	OTHER = "PvP",
 }
 
-RatingSummary_STAT = {
+GearStatsSummary_STAT = {
 	BASE = { "STR", "AGI", "STA", "INT", "SPI", "MASTERY", },
 	MELEE = { "AP", "EXPERTISE", "MELEE_HASTE", "MELEE_HIT", "MELEE_CRIT",},
 	RANGED = { "RANGED_AP", "EXPERTISE", "RANGED_HASTE", "RANGED_HIT", "RANGED_CRIT",},
@@ -546,7 +531,7 @@ RatingSummary_STAT = {
 	OTHER = { "RESILIENCE_REDUCTION", "PVP_POWER", }
 }
 
-RatingSummary_CLASS_STAT = {
+GearStatsSummary_CLASS_STAT = {
 	PALADIN = {
 		[1] = {"BASE", "CASTER", "OTHER", },
 		[2] = {"BASE", "TANK", "MELEE", "OTHER", },
@@ -608,8 +593,7 @@ RatingSummary_CLASS_STAT = {
 
 local ratingToEffect = function(sum, stat, val, class, level) return ISP:GetRatingsFromStat(val, level, stat , class, specid ) or 0,val end
 
-local SL = StatLogic;
-RatingSummary_Calc = {
+GearStatsSummary_Calc = {
 	STR = nil,
 	AGI = function(sum, stat, val, class, level) return val, ISP:GetCritFromAgi(val, level, class) end,
 	STA = function(sum, stat, val, class, level) return val, ISP:GetHPFromSta(val, level) end,
@@ -650,7 +634,7 @@ local CFI = GREEN_FONT_COLOR_CODE..FI..FONT_COLOR_CODE_CLOSE
 local BFI = GREEN_FONT_COLOR_CODE.."%d"..FONT_COLOR_CODE_CLOSE
 local FCRI = GREEN_FONT_COLOR_CODE..FP..FONT_COLOR_CODE_CLOSE.." ( "..FI.." ) ";
 
-RatingSummary_FORMAT = {
+GearStatsSummary_FORMAT = {
 	STR = BFI,
 	AGI = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_MELEE_CRIT..FONT_COLOR_CODE_CLOSE.." %.2f%%".." ) ",
 	STA = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_STA_NO_BONUS..FONT_COLOR_CODE_CLOSE.." ) ",
