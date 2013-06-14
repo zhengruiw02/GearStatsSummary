@@ -1,4 +1,3 @@
---local StatLogic = LibStub("LibStatLogic-1.2")
 local InspectLess = LibStub("LibInspectLess-1.0")
 local ISP = LibStub("LibItemStatsPlus")
 local itemlink_buff = {}
@@ -20,7 +19,7 @@ function GearStatsSummary_OnLoad(self)
 	InspectLess:RegisterCallback("InspectLess_InspectItemReady", GearStatsSummary_InspectItemReady)
 	InspectLess:RegisterCallback("InspectLess_InspectReady", GearStatsSummary_InspectReady)
 	SetOrHookScript(GearManagerDialogPopup, "OnShow", GearStatsSummary_InspectFrame_OnHide)
-	if CoreDependCall then
+	if CoreDependCall then --why do this?
 		CoreDependCall("Blizzard_TradeSkillUI", function()
 			SetOrHookScript(TradeSkillFrame, "OnShow", GearStatsSummary_InspectFrame_OnHide)
 		end)
@@ -32,6 +31,45 @@ function GearStatsSummary_SetupHook()
 	SetOrHookScript(InspectFrame, "OnShow", GearStatsSummary_InspectFrame);
 	SetOrHookScript(InspectFrame, "OnHide", GearStatsSummary_InspectFrame_OnHide);
 	hooksecurefunc("InspectFrame_UnitChanged", GearStatsSummary_InspectFrame_UnitChanged);
+end
+
+local tip
+if not tip then
+	-- Create a custom tooltip for scanning
+	tip = CreateFrame("GameTooltip", "GearStatsSummaryTooltip", nil, "GameTooltipTemplate")
+	tip:SetOwner(UIParent, "ANCHOR_NONE")
+	for i = 1, 40 do
+		tip[i] = _G["GearStatsSummaryTooltipTextLeft"..i]
+		if not tip[i] then
+			tip[i] = tip:CreateFontString()
+			tip:AddFontStrings(tip[i], tip:CreateFontString())
+			_G["GearStatsSummaryTooltipTextLeft"..i] = tip[i]
+		end
+	end
+elseif not _G["GearStatsSummaryTooltipTextLeft40"] then
+	for i = 1, 40 do
+		_G["GearStatsSummaryTooltipTextLeft"..i] = tip[i]
+	end
+end
+
+local GemSlots = {
+	EMPTY_SOCKET = true,
+	EMPTY_SOCKET_BLUE = true,
+	EMPTY_SOCKET_COGWHEEL = true,
+	EMPTY_SOCKET_HYDRAULIC = true,
+	EMPTY_SOCKET_META = true,
+	EMPTY_SOCKET_NO_COLOR = true,
+	EMPTY_SOCKET_PRISMATIC = true,
+	EMPTY_SOCKET_RED = true,
+	EMPTY_SOCKET_YELLOW = true,
+}
+
+function AddGem(Gems, gem)
+	if Gems[gem] == nil then
+		Gems[gem] = 1
+	else
+		Gems[gem] = Gems[gem] + 1
+	end
 end
 
 function GearStatsSummary_UpdateAnchor(doll, insp)
@@ -466,13 +504,57 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 			
 			for k,v in pairs(stats) do --newitemStat
 			--if i == INVSLOT_MAINHAND then print(k..":"..v) end
-				if(k~="itemType" and k~="link" and k~="Gems" and k~="Enchanted") then
+				if(k~="itemType" and k~="link" and k~="Gems" and k~="Enchanted" and k~="Set") then
 					--if (k=="ITEM_MOD_STAMINA_SHORT") then print(v) end
 					if(not sum[k]) then sum[k] = 0 end
 					sum[k] = sum[k] + v;
 				end
 			end
+------			
+			tip:ClearLines() -- this is required or SetX won't work the second time its called
+			tip:SetHyperlink(link)
+	
+			stats["Gems"] = {}
+			stats["Gems"]["GemSlotCount"] = 0
+			for i = 1,4 do
+				local texture = _G["GearStatsSummaryTooltipTexture"..i]:GetTexture();
+				if ( texture ) then
+					--if string.find(texture, "gem") then
+						if debugmode then print(texture) end
+						AddGem(stats["Gems"], "GemSlotCount")
+						if string.find(texture, "EmptySocket") then
+							AddGem(stats["Gems"], "EmptyGemSlotCount")
+						end
+					--end
+				end
+			end
 			
+			local OriGemSlotCount = 0
+			for k, v in next, GetItemStats(link) do
+				if(GemSlots[k]) then
+					OriGemSlotCount = OriGemSlotCount + v
+				end
+			end
+			if OriGemSlotCount < stats["Gems"]["GemSlotCount"] then
+				stats["Gems"]["ExtraSlot"] = 1
+			end
+
+			for i = 1, 3 do
+				local gemname, gemlink = GetItemGem(link, i)
+				if(gemlink) then
+					local name, link, quality, iLevel, reqLevel, itype, subType = GetItemInfo(gemlink)
+					AddGem(stats["Gems"], quality)
+				end
+			end
+			
+			local check, _, color, Ltype, Id, Enchant, Gem1, Gem2, Gem3, Gem4, Suffix, Unique, LinkLvl, Reforge, Upgrade, Name = string.find(link, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+):?(%d*):?(%d*):?(%d*):?(%d*):?(%d*):?(%-?%d*):?(%-?%d*):?(%d*):?(%d*):?(%d*)|?h?%[?([^%[%]c]*)%]?|?h?|?r?");
+
+			if tonumber(Enchant) > 0 then --func for RS
+				stats["Enchanted"] = 1
+			end
+------
+	
+	
 			if (stats["Gems"] ~= nil) then
 				if sum["Gems"] == nil then sum["Gems"] = {} end
 				for k,v in pairs(stats["Gems"]) do
@@ -494,6 +576,19 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 				end
 			end
 			
+			if (stats["Set"] ~= nil) then
+				for k,v in pairs(stats["Set"]) do
+					if sum["Set"] == nil then sum["Set"] = {} end
+					if sum["Set"][k] == nil then sum["Set"][k] = v end
+				end
+			end
+			
+		end
+	end
+
+	if sum["Set"]~=nil and unit=="player" then
+		for k,v in pairs(sum["Set"]) do
+			sum["ITEM_MOD_PVP_POWER_SHORT"] = sum["ITEM_MOD_PVP_POWER_SHORT"] + v
 		end
 	end
 
@@ -506,7 +601,7 @@ GearStatsSummary_STATS_CAT = {
 	RANGED = PLAYERSTAT_RANGED_COMBAT,
 	TANK = PLAYERSTAT_DEFENSES,
 	CASTER = PLAYERSTAT_SPELL_COMBAT,
-	OTHER = "PvP",
+	OTHER = PVP,
 }
 
 GearStatsSummary_STAT = {
@@ -605,8 +700,8 @@ GearStatsSummary_Calc = {
 	PARRY = ratingToEffect,
 	BLOCK = nil,
 
-	RESILIENCE_REDUCTION = nil,--ratingToEffect,
-	PVP_POWER = nil,--ratingToEffect,
+	RESILIENCE_REDUCTION = ratingToEffect,
+	PVP_POWER = ratingToEffect,
 	SPELL_DMG = function(sum, stat, val, class, level) return val + ISP:GetSPFromInt(sum[StatToStatName["INT"]] or 0, class) end,
 	SPELL_HIT = function(sum, stat, val, class, level) local v = val + ( sum[StatToStatName["EXPERTISE"]] or 0 ) return ISP:GetRatingsFromStat(v, level, stat) or 0, v end,
 	SPELL_CRIT = function(sum, stat, val, class, level)  local e = ISP:GetRatingsFromStat( val, level, stat ) return e + ISP:GetCritFromInt(sum[StatToStatName["AGI"]] or 0, level, class), val end,
@@ -648,8 +743,8 @@ GearStatsSummary_FORMAT = {
 	PARRY = FR,
 	BLOCK = FR,
 
-	RESILIENCE_REDUCTION = BFI,--FR,
-	PVP_POWER = BFI,--FR,
+	RESILIENCE_REDUCTION = FR,
+	PVP_POWER = FR,
 
 	SPELL_DMG = CFI,
 	HEAL = CFI,

@@ -3,7 +3,7 @@
 	Method:
 	stats = lib:GetItemStats(itemlink);
 	Returns: A table of item stats, as returns from API GetItemStats(itemlink).
-	Including item's enchant, gems, reforged stats by scanning item's tooltip.
+	Including item's enchant, gems, reforged stats by scanning item's tooltip BUT EXCLUDING GEM STOCKEY.
 	
 	===Additional Func===
 	
@@ -29,21 +29,17 @@
 	stats = {	[statName1] = value,
 				[statName2] = value,
 				... 
-				["Gems"] = 	{	["GemSlotCount"] = value,
-								["EmptyGemSlotCount"] = value,
-								["ExtraSlot"] = value, -- nil or 1 
-							}
-				["Enchanted"] = value, -- nil or 1
 			}
-	
 ]]
 local _, ns = ...
 local MAJOR = "LibItemStatsPlus";
-local MINOR = "$Revision: 3 $";
+local MINOR = "$Revision: 4 $";
 local debugmode = false
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR);
 if not lib then return end
+
+SLASH_LIBITEMSTATSPLUS1 = "/LISP";
 
 if debugmode then print(MAJOR.." "..MINOR.." loaded") end
 
@@ -123,43 +119,33 @@ local LOCALE_SDECIMAL = "."; --Character(s) used for the decimal separator
 local patDecimal = "%d-[%"..LOCALE_STHOUSAND.."?%d]+%"..LOCALE_SDECIMAL.."?%d*"; --regex to find a localized decimal number e.g. 
 
 local StatList = {
-	["ITEM_MOD_STAMINA_SHORT"]=ITEM_MOD_STAMINA_SHORT,
-	["ITEM_MOD_AGILITY_SHORT"]=ITEM_MOD_AGILITY_SHORT,
-	["ITEM_MOD_INTELLECT_SHORT"]=ITEM_MOD_INTELLECT_SHORT,
-	["ITEM_MOD_STRENGTH_SHORT"]=ITEM_MOD_STRENGTH_SHORT,
-	["ITEM_MOD_SPIRIT_SHORT"]=ITEM_MOD_SPIRIT_SHORT,
-	["ITEM_MOD_CRIT_RATING_SHORT"]=ITEM_MOD_CRIT_RATING_SHORT,
-	["ITEM_MOD_DODGE_RATING_SHORT"]=ITEM_MOD_DODGE_RATING_SHORT,
-	["ITEM_MOD_EXPERTISE_RATING_SHORT"]=ITEM_MOD_EXPERTISE_RATING_SHORT,
-	["ITEM_MOD_HASTE_RATING_SHORT"]=ITEM_MOD_HASTE_RATING_SHORT,
-	["ITEM_MOD_HIT_RATING_SHORT"]=ITEM_MOD_HIT_RATING_SHORT,
-	["ITEM_MOD_MASTERY_RATING_SHORT"]=ITEM_MOD_MASTERY_RATING_SHORT,
-	["ITEM_MOD_PARRY_RATING_SHORT"]=ITEM_MOD_PARRY_RATING_SHORT,
-	["ITEM_MOD_RESILIENCE_RATING_SHORT"]=ITEM_MOD_RESILIENCE_RATING_SHORT,
-	["ITEM_MOD_PVP_POWER_SHORT"]=ITEM_MOD_PVP_POWER_SHORT,
-	["ITEM_MOD_SPELL_POWER_SHORT"]=ITEM_MOD_SPELL_POWER_SHORT,
-	["SPELL_STATALL"]=SPELL_STATALL,
+	["RESISTANCE0_NAME"] = RESISTANCE0_NAME,
+	["ITEM_MOD_STAMINA_SHORT"] = ITEM_MOD_STAMINA_SHORT,
+	["ITEM_MOD_AGILITY_SHORT"] = ITEM_MOD_AGILITY_SHORT,
+	["ITEM_MOD_INTELLECT_SHORT"] = ITEM_MOD_INTELLECT_SHORT,
+	["ITEM_MOD_STRENGTH_SHORT"] = ITEM_MOD_STRENGTH_SHORT,
+	["ITEM_MOD_SPIRIT_SHORT"] = ITEM_MOD_SPIRIT_SHORT,
+	["ITEM_MOD_CRIT_RATING_SHORT"] = ITEM_MOD_CRIT_RATING_SHORT,
+	["ITEM_MOD_DODGE_RATING_SHORT"] = ITEM_MOD_DODGE_RATING_SHORT,
+	["ITEM_MOD_EXPERTISE_RATING_SHORT"] = ITEM_MOD_EXPERTISE_RATING_SHORT,
+	["ITEM_MOD_HASTE_RATING_SHORT"] = ITEM_MOD_HASTE_RATING_SHORT,
+	["ITEM_MOD_HIT_RATING_SHORT"] = ITEM_MOD_HIT_RATING_SHORT,
+	["ITEM_MOD_MASTERY_RATING_SHORT"] = ITEM_MOD_MASTERY_RATING_SHORT,
+	["ITEM_MOD_PARRY_RATING_SHORT"] = ITEM_MOD_PARRY_RATING_SHORT,
+	["ITEM_MOD_RESILIENCE_RATING_SHORT"] = ITEM_MOD_RESILIENCE_RATING_SHORT,
+	["ITEM_MOD_PVP_POWER_SHORT"] = ITEM_MOD_PVP_POWER_SHORT,
+	["ITEM_MOD_SPELL_POWER_SHORT"] = ITEM_MOD_SPELL_POWER_SHORT,
+	["SPELL_STATALL"] = SPELL_STATALL,
 }
 
-local GemSlots = {
-	EMPTY_SOCKET = true,
-	EMPTY_SOCKET_BLUE = true,
-	EMPTY_SOCKET_COGWHEEL = true,
-	EMPTY_SOCKET_HYDRAULIC = true,
-	EMPTY_SOCKET_META = true,
-	EMPTY_SOCKET_NO_COLOR = true,
-	EMPTY_SOCKET_PRISMATIC = true,
-	EMPTY_SOCKET_RED = true,
-	EMPTY_SOCKET_YELLOW = true,
-}
-
-local Greycolor ={128/255, 128/255, 128/255}
+--[[local Greycolor ={128/255, 128/255, 128/255}
 local Whitecolor ={1, 1, 1}
 local Greedcolor ={0, 1, 0}
-local Yellocolor ={1, 210/255, 0}
+local Yellocolor ={1, 210/255, 0}]]
 
 function AddStats(stats, statName, value)
-	value=string.gsub(value,",","")
+	value = string.gsub( value , LOCALE_STHOUSAND , "" )
+	value = tonumber(value)
 	if stats[statName] == nil then
 		stats[statName] = value
 	else
@@ -178,6 +164,17 @@ function ParseLine(stats, text, r, g, b)
 		text = strsub(text, 11)
 	end
 
+	--armor
+	local found, _, value, statNameStr = string.find(text, "("..patDecimal..")(.*)");
+	if found then
+		found = string.find(string.upper(statNameStr), ".?"..string.upper(RESISTANCE0_NAME));
+		if found then
+			AddStats(stats, "RESISTANCE0_NAME", value)
+			return stats
+		end
+		
+	end
+	
 	--dual stats
 	local found, _, value1, statNameStr1, value2, statNameStr2 = string.find(text, ".-%+("..patDecimal..")(.-)%+("..patDecimal..")(.*)");
 	if found then
@@ -188,6 +185,7 @@ function ParseLine(stats, text, r, g, b)
 			if string.find(string.upper(statNameStr2), "^%s*"..string.upper(statNameText)) then
 				AddStats(stats, statName, value2)
 			end
+			
 		end
 		return stats
 	end
@@ -206,20 +204,12 @@ function ParseLine(stats, text, r, g, b)
 				else
 					AddStats(stats, statName, value)
 				end
+				return stats
 			end
 		end
-		return stats
+		
 	end
-	
 	return stats
-end
-
-function AddGem(Gems, gem)
-	if Gems[gem] == nil then
-		Gems[gem] = 1
-	else
-		Gems[gem] = Gems[gem] + 1
-	end
 end
 
 function lib:GetItemStats(itemlink, ...)
@@ -242,50 +232,11 @@ function lib:GetItemStats(itemlink, ...)
 		end
 		ParseLine(stats, text, r, g, b);
 	end --for each line in the tooltip
-
-	------ func for GSS begin ------
-	stats["Gems"] = {}
-	stats["Gems"]["GemSlotCount"] = 0
- 	for i = 1,4 do
- 		local texture = _G[MAJOR.."TooltipTexture"..i]:GetTexture();
- 		if ( texture ) then
-			--if string.find(texture, "gem") then
-				if debugmode then print(texture) end
-				AddGem(stats["Gems"], "GemSlotCount")
-				if string.find(texture, "EmptySocket") then
-					AddGem(stats["Gems"], "EmptyGemSlotCount")
-				end
-			--end
-	 	end
- 	end
-	
-	local OriGemSlotCount = 0
-	for k, v in next, GetItemStats(itemlink) do
-		if(GemSlots[k]) then
-			OriGemSlotCount = OriGemSlotCount + v
-		end
-	end
-	if OriGemSlotCount < stats["Gems"]["GemSlotCount"] then
-		stats["Gems"]["ExtraSlot"] = 1
-	end
-
-	for i = 1, 3 do
-		local gemname, gemlink = GetItemGem(itemlink, i)
-		if(gemlink) then
-			local name, link, quality, iLevel, reqLevel, itype, subType = GetItemInfo(gemlink)
-			AddGem(stats["Gems"], quality)
-		end
-	end
-	
-	if tonumber(Enchant) > 0 then --func for RS
-		stats["Enchanted"] = 1
-	end
-	------ func for GSS end ------
 	
 	if debugmode then
 		print(Name)
 		for i,v in pairs(stats) do
-			if v~=stats["Gems"] then print(i..","..v) end
+			print(i..","..v)
 		end
 		print("------")	
 	end
@@ -318,7 +269,8 @@ function lib:GetRatingsFromStat(value, level, statName, classid, specid)
 		-- handle resilience with DR in lv 90
 		-- TODO: add formula for resilience with DR in other levels
 		-- more info here: http://www.icy-veins.com/forums/topic/303-combat-ratings-at-level-90-in-mists-of-pandaria/#pvp_resilience
-		ratings = 100 - 100 * 0.99 ^ ( value / 310 )
+		-- ratings = 100 - 100 * 0.99 ^ ( value / 310 )
+		ratings = 35 * ( value / ( value + 23187 ) )
 	elseif ( statIndex == 9 ) then 
 		-- TODO: handle different class and spec in mastery rather than lookup in db
 		classid = CheckClassID(classid)
@@ -397,3 +349,23 @@ function lib:GetUpgradeLevel(link)
 		return itemLevel
 	end
 end
+function CommandHandler(msg)
+	if (not msg) then msg=""; end
+	if (strlen(msg)>0) then msg=strlower(msg); end
+	
+	if(msg == "debug") then
+		if debugmode then
+			debugmode = false;
+			print(MAJOR.." "..MINOR.." : debug disabled")
+		else
+			debugmode = true;
+			print(MAJOR.." "..MINOR.." : debug enabled")
+		end;
+		return;
+	elseif(msg=="") then
+		print(MAJOR.." slash list:")
+		print(SLASH_LIBITEMSTATSPLUS1.." debug")
+	end;
+	
+end
+SlashCmdList["LIBITEMSTATSPLUS"]=function(msg) CommandHandler(msg) end;

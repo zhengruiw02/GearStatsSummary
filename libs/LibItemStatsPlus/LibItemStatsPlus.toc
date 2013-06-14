@@ -10,6 +10,7 @@
 ## X-Git: https://gitcafe.com/zhengruiw02/LibItemStatsPlus
 ## OptionalDeps: LibStub
 
+LibStub\LibStub.lua
 Data\include.xml
 
 LibItemStatsPlus.lua
