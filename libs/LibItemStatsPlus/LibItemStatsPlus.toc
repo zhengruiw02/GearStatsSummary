@@ -2,15 +2,13 @@
 
 ## Title: Lib: ItemStatsPlus
 ## Notes: Library for summing up all stats from itemlink
-## Version: 0x03
+## Version: 0x05
 ## Author: zhengruiw02
 ## X-E-mail: zhengruiw02 [at] gmail.com
 ## X-Category: Library
 ## X-License: GNU General Public License version 3 (GPLv3)
-## X-Git: https://gitcafe.com/zhengruiw02/LibItemStatsPlus
+## X-GitCafe: https://gitcafe.com/zhengruiw02/LibItemStatsPlus
+## X-GitHub: https://github.com/zhengruiw02/LibItemStatsPlus.git
 ## OptionalDeps: LibStub
 
-LibStub\LibStub.lua
-Data\include.xml
-
-LibItemStatsPlus.lua
+lib.xml

@@ -1,5 +1,4 @@
 --[[
-
 	Method:
 	stats = lib:GetItemStats(itemlink);
 	Returns: A table of item stats, as returns from API GetItemStats(itemlink).
@@ -33,7 +32,7 @@
 ]]
 local _, ns = ...
 local MAJOR = "LibItemStatsPlus";
-local MINOR = "$Revision: 4 $";
+local MINOR = "$Revision: 5 $";
 local debugmode = false
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR);
@@ -41,8 +40,7 @@ if not lib then return end
 
 SLASH_LIBITEMSTATSPLUS1 = "/LISP";
 
-if debugmode then print(MAJOR.." "..MINOR.." loaded") end
-
+local GetClassIDFromClassName = ns.GetClassIDFromClassName 
 local CombatRatingsFromIndexToName = ns.CombatRatingsFromIndexToName
 local CombatRatingsFromNameToIndex = ns.CombatRatingsFromNameToIndex
 local CombatRatingsFromRatingIDToIndex = ns.CombatRatingsFromRatingIDToIndex
@@ -61,6 +59,9 @@ local SpecIDToSpecIndex = ns.SpecIDToSpecIndex
 local MeleeCritRatings = ns.MeleeCritRatings
 local SpellCritRatings = ns.SpellCritRatings
 local UpgradeLevels = ns.UpgradeLevels
+local UpgradeLevels = ns.UpgradeLevels
+local StatsList = ns.StatsList
+local StatsListEquip = ns.StatsListEquip
 
 local cache = {}
 setmetatable(cache, {__mode = "kv"}) -- weak table to enable garbage collection
@@ -85,20 +86,6 @@ elseif not _G[MAJOR.."TooltipTextLeft40"] then
 	end
 end
 
-local GetClassIDFromClassName = {
-	["WARRIOR"] = 1,
-	["PALADIN"] = 2,
-	["HUNTER"] = 3,
-	["ROGUE"] = 4,
-	["PRIEST"] = 5,
-	["DEATHKNIGHT"] = 6,
-	["SHAMAN"] = 7,
-	["MAGE"] = 8,
-	["WARLOCK"] = 9,
-	["MONK"] = 10,
-	["DRUID"] = 11,
-}
-
 local function CheckClassID(classid)
 	if type(classid) ~= "number" then classid = GetClassIDFromClassName[classid] end
 	if not classid then
@@ -114,29 +101,23 @@ local function GetStatIndex(statName)
 	return statIndex
 end
 
-local LOCALE_STHOUSAND = ",";  --Character used to separate groups of digits
-local LOCALE_SDECIMAL = "."; --Character(s) used for the decimal separator
-local patDecimal = "%d-[%"..LOCALE_STHOUSAND.."?%d]+%"..LOCALE_SDECIMAL.."?%d*"; --regex to find a localized decimal number e.g. 
+local Locale = GetLocale()
+do
+	if (Locale=="enUS" or Locale=="zhCN" or Locale=="zhTW" or Locale=="koKR") then
+		LOCALE_STHOUSAND = "," --Character used to separate groups of digits
+		LOCALE_SDECIMAL = "." --Character(s) used for the decimal separator
+	elseif (Locale=="deDE" or Locale=="esES" or Locale=="frFR" or Locale=="itIT" or Locale=="ruRU") then
+		LOCALE_STHOUSAND = "."
+		LOCALE_SDECIMAL = ","
+	elseif (Locale=="ptBR") then
+		LOCALE_STHOUSAND = "%p"
+		LOCALE_SDECIMAL = "%p"
+	else
 
-local StatList = {
-	["RESISTANCE0_NAME"] = RESISTANCE0_NAME,
-	["ITEM_MOD_STAMINA_SHORT"] = ITEM_MOD_STAMINA_SHORT,
-	["ITEM_MOD_AGILITY_SHORT"] = ITEM_MOD_AGILITY_SHORT,
-	["ITEM_MOD_INTELLECT_SHORT"] = ITEM_MOD_INTELLECT_SHORT,
-	["ITEM_MOD_STRENGTH_SHORT"] = ITEM_MOD_STRENGTH_SHORT,
-	["ITEM_MOD_SPIRIT_SHORT"] = ITEM_MOD_SPIRIT_SHORT,
-	["ITEM_MOD_CRIT_RATING_SHORT"] = ITEM_MOD_CRIT_RATING_SHORT,
-	["ITEM_MOD_DODGE_RATING_SHORT"] = ITEM_MOD_DODGE_RATING_SHORT,
-	["ITEM_MOD_EXPERTISE_RATING_SHORT"] = ITEM_MOD_EXPERTISE_RATING_SHORT,
-	["ITEM_MOD_HASTE_RATING_SHORT"] = ITEM_MOD_HASTE_RATING_SHORT,
-	["ITEM_MOD_HIT_RATING_SHORT"] = ITEM_MOD_HIT_RATING_SHORT,
-	["ITEM_MOD_MASTERY_RATING_SHORT"] = ITEM_MOD_MASTERY_RATING_SHORT,
-	["ITEM_MOD_PARRY_RATING_SHORT"] = ITEM_MOD_PARRY_RATING_SHORT,
-	["ITEM_MOD_RESILIENCE_RATING_SHORT"] = ITEM_MOD_RESILIENCE_RATING_SHORT,
-	["ITEM_MOD_PVP_POWER_SHORT"] = ITEM_MOD_PVP_POWER_SHORT,
-	["ITEM_MOD_SPELL_POWER_SHORT"] = ITEM_MOD_SPELL_POWER_SHORT,
-	["SPELL_STATALL"] = SPELL_STATALL,
-}
+	end
+end
+
+local patDecimal = "%d-[%"..LOCALE_STHOUSAND.."?%d]+%"..LOCALE_SDECIMAL.."?%d*"; --regex to find a localized decimal number e.g. 
 
 --[[local Greycolor ={128/255, 128/255, 128/255}
 local Whitecolor ={1, 1, 1}
@@ -172,13 +153,12 @@ function ParseLine(stats, text, r, g, b)
 			AddStats(stats, "RESISTANCE0_NAME", value)
 			return stats
 		end
-		
 	end
 	
 	--dual stats
 	local found, _, value1, statNameStr1, value2, statNameStr2 = string.find(text, ".-%+("..patDecimal..")(.-)%+("..patDecimal..")(.*)");
 	if found then
-		for statName, statNameText in pairs(StatList) do
+		for statName, statNameText in pairs(StatsList) do
 			if string.find(string.upper(statNameStr1), "^%s*"..string.upper(statNameText)) then
 				AddStats(stats, statName, value1)
 			end
@@ -193,7 +173,7 @@ function ParseLine(stats, text, r, g, b)
 	--single stats
 	local found, _, value, statNameStr = string.find(text, ".-%+?("..patDecimal..")(.*)");
 	if found then
-		for statName, statNameText in pairs(StatList) do
+		for statName, statNameText in pairs(StatsList) do
 			found = string.find(string.upper(statNameStr), "^%s*"..string.upper(statNameText));
 			if found then
 				if statName=="SPELL_STATALL" then
@@ -207,7 +187,19 @@ function ParseLine(stats, text, r, g, b)
 				return stats
 			end
 		end
-		
+	end
+	
+	--"Equip:"
+	local found = string.find(text, ITEM_SPELL_TRIGGER_ONEQUIP);
+	if found then
+		for statName, statNameText in pairs(StatsListEquip) do
+			statNameText = gsub(statNameText, "%%s", "("..patDecimal..")")
+			found, _, value = string.find(text, statNameText);
+			if found then
+				AddStats(stats, statName, value)
+				return stats
+			end
+		end
 	end
 	return stats
 end
@@ -349,6 +341,7 @@ function lib:GetUpgradeLevel(link)
 		return itemLevel
 	end
 end
+
 function CommandHandler(msg)
 	if (not msg) then msg=""; end
 	if (strlen(msg)>0) then msg=strlower(msg); end
@@ -366,6 +359,5 @@ function CommandHandler(msg)
 		print(MAJOR.." slash list:")
 		print(SLASH_LIBITEMSTATSPLUS1.." debug")
 	end;
-	
 end
 SlashCmdList["LIBITEMSTATSPLUS"]=function(msg) CommandHandler(msg) end;

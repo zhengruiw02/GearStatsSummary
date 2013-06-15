@@ -15,6 +15,7 @@ function GearStatsSummary_OnLoad(self)
 	self:RegisterEvent("VARIABLES_LOADED");
 	self:RegisterEvent("ADDON_LOADED");
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED");
+	self:RegisterEvent("ITEM_UPGRADE_MASTER_UPDATE");
 
 	InspectLess:RegisterCallback("InspectLess_InspectItemReady", GearStatsSummary_InspectItemReady)
 	InspectLess:RegisterCallback("InspectLess_InspectReady", GearStatsSummary_InspectReady)
@@ -156,6 +157,13 @@ function GearStatsSummary_OnEvent(self, event, ...)
 			GearStatsSummary_HideFrame(GearStatsSummaryTargetFrame);
 			GearStatsSummary_ShowFrame(GearStatsSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y);
 			GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,GearStatsSummaryTargetFrame,UnitName("player"),0,0);
+		end
+	end
+	
+	if event == "ITEM_UPGRADE_MASTER_UPDATE" then
+		if GearStatsSummarySelfFrame:IsVisible() then
+			GearStatsSummary_HideFrame(GearStatsSummarySelfFrame);
+			GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,PaperDollFrame,UnitName("player"),OFFSET_X,OFFSET_Y);
 		end
 	end
 end
@@ -387,11 +395,11 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 		for _, stat in pairs(GearStatsSummary_STAT[cat]) do
 			--ChatFrame1:AddMessage(stat);
 			local func = GearStatsSummary_Calc[stat]
-			local s1,s2,s3,s4;
+			local s1,s2;
 			if not func then
 				s1 = sum[StatToStatName[stat]] or 0
 			else
-				s1,s2,s3,s4 = func(sum, StatToStatName[stat], sum[StatToStatName[stat]] or 0, uc, ul, spec)
+				s1,s2 = func(sum, StatToStatName[stat], sum[StatToStatName[stat]] or 0, uc, ul, spec)
 			end
 			local ff = GearStatsSummary_FORMAT[stat] or GREEN_FONT_COLOR_CODE.."%d"..FONT_COLOR_CODE_CLOSE;
 			if(type(s1)~="number") then
@@ -405,7 +413,7 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 					catStr = catStr.."\n"..format(ff, s1, active, s2)
 					if sum.ArmorBonus == nil then catStr = catStr.."\n\n".."|cffff0000"..NONE..ARMOR..SPECIALIZATION.."!|r" end
 				else
-					catStr = catStr.."\n"..format(ff, s1, s2, s3, s4)
+					catStr = catStr.."\n"..format(ff, s1, s2 or "")
 				end
 				--ChatFrame1:AddMessage(format(ff, s1, s2, s3, s4))
 			end
@@ -721,8 +729,8 @@ GearStatsSummary_FORMAT = {
 	STR = BFI,
 	AGI = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_MELEE_CRIT..FONT_COLOR_CODE_CLOSE.." %.2f%%".." ) ",
 	STA = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_STA_NO_BONUS..FONT_COLOR_CODE_CLOSE.." ) ",
-	INT = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_SPELL_CRIT..FONT_COLOR_CODE_CLOSE.." %.2f%%".." ) ",
-	--SPI = BFI.." ( "..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_MANA_REGEN..FONT_COLOR_CODE_CLOSE..FI.." ) ",
+	INT = BFI.." ("..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_SPELL_CRIT..FONT_COLOR_CODE_CLOSE..FP.." ) ",
+	--SPI = BFI.." ( "..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_MANA_REGEN..FONT_COLOR_CODE_CLOSE.." %.2f".." ) ",
 	SPI = BFI,
 	MASTERY = BFI.." ("..NORMAL_FONT_COLOR_CODE.."%s: "..FONT_COLOR_CODE_CLOSE..FP.." ) ",
 

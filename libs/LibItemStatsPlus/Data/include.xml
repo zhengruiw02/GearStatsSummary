@@ -8,5 +8,6 @@
 	<Script file="MeleeCrit.lua"/>
 	<Script file="MPPerSpt.lua"/>
 	<Script file="SpellCrit.lua"/>
+	<Script file="StatsList.lua"/>
 	<Script file="UpgradeLevels.lua"/>
 </Ui>

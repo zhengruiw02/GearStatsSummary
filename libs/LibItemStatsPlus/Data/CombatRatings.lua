@@ -54,7 +54,7 @@ ns.CombatRatingsFromRatingIDToIndex = {
 	["CR_PVP_POWER"] = 10,
 }
 
-ns.CombatRating10 = {
+--[[ns.CombatRating10 = {
 	0.796153128,
 	0.796153128,
 	0.265384376,
@@ -78,7 +78,7 @@ ns.CombatRating60 = {
 	[8] = {0.1538, 0.3077},
 	[9] = {0.2692, 0.5385},
 	[10] = {0.1532, 0.3063},
-}
+}]]
 --DODGE PARRY BLOCK HIT CRIT RESILIENCE HASTE EXPERTISE MASTERY PVP_POWER
 --gtCombatRatings.dbc
 ns.CombatRatings = {

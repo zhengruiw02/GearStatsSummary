@@ -1,4 +1,18 @@
 local _, ns = ...
+ns.GetClassIDFromClassName = {
+	["WARRIOR"] = 1,
+	["PALADIN"] = 2,
+	["HUNTER"] = 3,
+	["ROGUE"] = 4,
+	["PRIEST"] = 5,
+	["DEATHKNIGHT"] = 6,
+	["SHAMAN"] = 7,
+	["MAGE"] = 8,
+	["WARLOCK"] = 9,
+	["MONK"] = 10,
+	["DRUID"] = 11,
+}
+
 ns.MasteryCoefficients = {
 	[1] = {2.3, 1.4, 2.2},
 	[2] = {1.5, 1, 0,0,0,2.1},

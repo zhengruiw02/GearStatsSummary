@@ -7,7 +7,7 @@
 ## Title: cff00ff00GearStatsSummary|r
 ## Title-zhCN: |cff00ff00GearStatsSummary|r 
 ## Title-zhTW: |cff00ff00GearStatsSummary|r 
-## Version: GSS_release 2
+## Version: GSS_release 3
 
 embeds.xml
 
