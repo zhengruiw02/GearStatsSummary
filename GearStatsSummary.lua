@@ -364,7 +364,7 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	--local r,g,b = U1GetInventoryLevelColor(avgLevel)
 	color = HIGHLIGHT_FONT_COLOR_CODE
 	if(avgLevel and avgLevel>0) then
-		tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LEVEL_SHORT.."："..FONT_COLOR_CODE_CLOSE..color..format("%.1f",avgLevel)..FONT_COLOR_CODE_CLOSE
+		tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LEVEL_SHORT..": "..FONT_COLOR_CODE_CLOSE..color..format("%.1f",avgLevel)..FONT_COLOR_CODE_CLOSE
 	end
 	
 	tiptext=tiptext.."\n\n"..NORMAL_FONT_COLOR_CODE..RS_STATS_ONLY_FROM_GEARS..FONT_COLOR_CODE_CLOSE
@@ -413,7 +413,10 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 					catStr = catStr.."\n"..format(ff, s1, active, s2)
 					if sum.ArmorBonus == nil then catStr = catStr.."\n\n".."|cffff0000"..NONE..ARMOR..SPECIALIZATION.."!|r" end
 				else
-					catStr = catStr.."\n"..format(ff, s1, s2 or "")
+					if not s2 then s2 = '' end
+					if pcall(format, ff, s1, s2) then
+						catStr = catStr.."\n"..format(ff, s1, s2)
+					end
 				end
 				--ChatFrame1:AddMessage(format(ff, s1, s2, s3, s4))
 			end
