@@ -1,4 +1,5 @@
-MPPerSpt = {
+local lib = LibStub:GetLibrary("LibItemStatsPlus")
+lib.MPPerSpt = {
 --classid,MPPerSpt
 	[1] = 0,
 	[2] = 0.225753650069,

@@ -1,5 +1,5 @@
-local _, ns = ...
-ns.GetClassIDFromClassName = {
+local lib = LibStub:GetLibrary("LibItemStatsPlus")
+lib.GetClassIDFromClassName = {
 	["WARRIOR"] = 1,
 	["PALADIN"] = 2,
 	["HUNTER"] = 3,
@@ -13,7 +13,7 @@ ns.GetClassIDFromClassName = {
 	["DRUID"] = 11,
 }
 
-ns.MasteryCoefficients = {
+lib.MasteryCoefficients = {
 	[1] = {2.3, 1.4, 2.2},
 	[2] = {1.5, 1, 0,0,0,2.1},
 	[3] = {2, 2, 1},
@@ -27,6 +27,6 @@ ns.MasteryCoefficients = {
 	[11] = {1.875, 3.13, 1.25, 1.25},
 }
 
-ns.SpecIDToSpecIndex = {
+lib.SpecIDToSpecIndex = {
 70, 64, 252, 258, 255, 249, 261, 61, 264, 267, 101,
 }

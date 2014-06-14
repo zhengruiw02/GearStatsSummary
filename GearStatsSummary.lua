@@ -2,6 +2,7 @@ local InspectLess = LibStub("LibInspectLess-1.0")
 local ISP = LibStub("LibItemStatsPlus")
 local itemlink_buff = {}
 local OFFSET_X, OFFSET_Y = 2, 2;
+local INVSLOT_AVALIABLE = 15
 
 local function SetOrHookScript(frame, scriptName, func)
 	if( frame:GetScript(scriptName) ) then
@@ -16,6 +17,7 @@ function GearStatsSummary_OnLoad(self)
 	self:RegisterEvent("ADDON_LOADED");
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED");
 	self:RegisterEvent("ITEM_UPGRADE_MASTER_UPDATE");
+	self:RegisterEvent("REPLACE_ENCHANT");
 
 	InspectLess:RegisterCallback("InspectLess_InspectItemReady", GearStatsSummary_InspectItemReady)
 	InspectLess:RegisterCallback("InspectLess_InspectReady", GearStatsSummary_InspectReady)
@@ -65,7 +67,7 @@ local GemSlots = {
 	EMPTY_SOCKET_YELLOW = true,
 }
 
-function AddGem(Gems, gem)
+local function AddGem(Gems, gem)
 	if Gems[gem] == nil then
 		Gems[gem] = 1
 	else
@@ -160,7 +162,7 @@ function GearStatsSummary_OnEvent(self, event, ...)
 		end
 	end
 	
-	if event == "ITEM_UPGRADE_MASTER_UPDATE" then
+	if event == "ITEM_UPGRADE_MASTER_UPDATE" or event == "REPLACE_ENCHANT" then
 		if GearStatsSummarySelfFrame:IsVisible() then
 			GearStatsSummary_HideFrame(GearStatsSummarySelfFrame);
 			GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,PaperDollFrame,UnitName("player"),OFFSET_X,OFFSET_Y);
@@ -187,6 +189,15 @@ function GearStatsSummary_InspectFrame(self)
 	if InspectLess:IsDone() and InspectLess:GetGUID()==UnitGUID(self.unit) then
 		GearStatsSummary_InspectItemReady("InspectLess_InspectItemReady", self.unit, InspectLess:GetGUID(), InspectLess:IsDone());
 	end
+	if not IsAddOnLoaded("ElvUI") and not IsAddOnLoaded("Tukui") then
+		local guild, level, levelid = GetGuildInfo(self.unit)
+		if(guild) then
+			InspectTitleText:Show();
+			InspectTitleText:SetText("<"..guild.."> "..level.." ["..levelid.."]"); -- edited
+		else
+			InspectTitleText:SetText("");
+		end
+	end
 end
 
 function GearStatsSummary_InspectItemReady(event, unit, guid, ready)
@@ -194,6 +205,24 @@ function GearStatsSummary_InspectItemReady(event, unit, guid, ready)
 	GearStatsSummary_ShowFrame(GearStatsSummaryTargetFrame,InspectFrame,UnitName(InspectFrame.unit),OFFSET_X,OFFSET_Y,ready);
 	GearStatsSummary_ShowFrame(GearStatsSummarySelfFrame,GearStatsSummaryTargetFrame,UnitName("player"),0,0);
 	GearStatsSummary_UpdateAnchor(nil, 1, nil)
+end
+
+local function GetTalentSpec(unit)
+	local spec
+	if not unit then
+		spec = GetSpecialization()
+	else
+		spec = GetInspectSpecialization(unit)
+	end
+	if(spec ~= nil and spec > 0) then
+		if unit ~= nil then
+			local _, name = GetSpecializationInfoByID(spec);
+			return name
+		else
+			local _, name = GetSpecializationInfo(spec)
+			return name
+		end
+	end
 end
 
 function GearStatsSummary_InspectReady(event, unit, guid, done)
@@ -204,10 +233,13 @@ function GearStatsSummary_InspectReady(event, unit, guid, done)
 			local tiptext = getglobal(frame:GetName().."Text"):GetText();
 
 			--主天赋显示在装备等级后
-			local talent = GetInspectSpecialization(unit);
-			talent = talent and talent>0 and select(2, GetSpecializationInfoByID(talent))
-			if talent then tiptext = tiptext:gsub("([^\n]*"..RATING_SUMMARY_ITEM_LEVEL_SHORT.."：".."[^\n]*)", "%1 ("..select(2, GetSpecializationInfo(talent, true)).." ) ") end
-
+		--	local talent = GetInspectSpecialization(unit);
+			
+		--	talent = talent and talent>0 and select(2, GetSpecializationInfoByID(talent))
+		--	if talent then tiptext = tiptext:gsub("([^\n]*"..RATING_SUMMARY_ITEM_LEVEL_SHORT.."：".."[^\n]*)", "%1 ("..select(2, GetSpecializationInfo(talent, true)).." ) ") end
+			local talent = GetTalentSpec(unit)
+			if talent then tiptext = tiptext:gsub("([^\n]*"..RATING_SUMMARY_ITEM_LEVEL_SHORT.."：".."[^\n]*)", "%1 ("..talent.." ) ") end
+			
 			tiptext = tiptext.."\n\n"..GearStatsSummary_GetTalentString(true)
 			frame.talented = true;
 			GearStatsSummary_SetFrameText(frame, nil, tiptext, InspectFrame.unit);
@@ -359,12 +391,11 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	--DevTools_Dump(sum);
 	local tiptext = "";
 	
-	--local avgLevel, color, resilience, totalLevel, count, slotCount, itemLinks = U1GetInventoryLevel(unit)
-	local avgLevel = (sum["ITEMLEVEL"] or 0) / ( sum["ITEMCOUNT"] or 1)
-	--local r,g,b = U1GetInventoryLevelColor(avgLevel)
+	local avgLevel = (sum["ITEMLEVEL"] or 0) / sum["ITEMSLOTFORCALC"]
+	
 	color = HIGHLIGHT_FONT_COLOR_CODE
 	if(avgLevel and avgLevel>0) then
-		tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LEVEL_SHORT.."："..FONT_COLOR_CODE_CLOSE..color..format("%.1f",avgLevel)..FONT_COLOR_CODE_CLOSE
+		tiptext=tiptext.."\n"..NORMAL_FONT_COLOR_CODE..RATING_SUMMARY_ITEM_LEVEL_SHORT..": "..FONT_COLOR_CODE_CLOSE..color..format("%.1f",avgLevel)..FONT_COLOR_CODE_CLOSE
 	end
 	
 	tiptext=tiptext.."\n\n"..NORMAL_FONT_COLOR_CODE..RS_STATS_ONLY_FROM_GEARS..FONT_COLOR_CODE_CLOSE
@@ -413,7 +444,10 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 					catStr = catStr.."\n"..format(ff, s1, active, s2)
 					if sum.ArmorBonus == nil then catStr = catStr.."\n\n".."|cffff0000"..NONE..ARMOR..SPECIALIZATION.."!|r" end
 				else
-					catStr = catStr.."\n"..format(ff, s1, s2 or "")
+					if not s2 then s2 = '' end
+					if pcall(format, ff, s1, s2) then
+						catStr = catStr.."\n"..format(ff, s1, s2)
+					end
 				end
 				--ChatFrame1:AddMessage(format(ff, s1, s2, s3, s4))
 			end
@@ -445,7 +479,19 @@ function GearStatsSummary_ShowFrame(frame,target,tiptitle,anchorx,anchory,ready)
 	end
 
 	local total_enchant, has_enchant, missing_enchant = (sum["CanEnchant"] or 0), (sum["HasEnchant"] or 0), sum["EnchantMissing"]
-	tiptext = tiptext .. ('\n'..RATING_SUMMARY_ENCHANT..': '..(total_enchant==has_enchant and "%d" or "|cffff0000%d|r")..'/%d |cffff0000%s|r'):format(has_enchant, total_enchant, missing_enchant)
+	if total_enchant ~= 0 then
+		tiptext = tiptext .. ('\n'..RATING_SUMMARY_ENCHANT..': '..(total_enchant==has_enchant and "%d" or "|cffff0000%d|r")..'/%d |cffff0000%s|r'):format(has_enchant, total_enchant, missing_enchant)
+	end
+
+	local total_extra_socket, has_extra_socket, missing_extra_socket = (sum["CanExtraSocket"] or 0), (sum["HasExtraSocket"] or 0), sum["ExtraSocketMissing"]
+	if total_extra_socket ~= 0 then
+		tiptext = tiptext .. ('\n'..RATING_SUMMARY_EXTRA_SOCKET..': '..(total_extra_socket==has_extra_socket and "%d" or "|cffff0000%d|r")..'/%d |cffff0000%s|r'):format(has_extra_socket, total_extra_socket, missing_extra_socket)
+	end
+	
+	-- local total_tinker, has_tinker, missing_tinker = (sum["CanTinker"] or 0), (sum["HasTinker"] or 0), sum["TinkerMissing"]
+	-- if total_tinker ~= 0 then
+		-- tiptext = tiptext .. ('\n'..RATING_SUMMARY_TINKER..': '..(total_tinker==has_tinker and "%d" or "|cffff0000%d|r")..'/%d |cffff0000%s|r'):format(has_tinker, total_tinker, missing_tinker)
+	-- end
 
 	--talent
 	if not inspecting then
@@ -477,13 +523,41 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 	--local _, ur = UnitRace(unit)
 	--local ul = UnitLevel(unit)
 	
+	local isEnchanting, isBlacksmithing--, isEngineering
+	if unit == "player" then
+		local prof1, prof2, _, _, _, _ = GetProfessions()
+		if prof1 then
+			local _, prof1_texture, prof1_lv, _, _, _, _, _ = GetProfessionInfo(prof1)
+			if (prof1_texture:find('Trade_Engraving') and prof1_lv >= 550) then
+				isEnchanting = true
+			elseif (prof1_texture:find('Trade_BlackSmithing') and prof1_lv >= 550) then
+				isBlacksmithing = true
+			-- elseif (prof1_texture:find('Trade_Engineering') and prof1_lv >= 550) then
+				-- isEngineering = true
+			end
+		end
+		if prof2 then
+			local _, prof2_texture, prof2_lv, _, _, _, _, _ = GetProfessionInfo(prof2)
+			if (prof2_texture:find('Trade_Engraving') and prof2_lv >= 550) then
+				isEnchanting = true
+			elseif (prof2_texture:find('Trade_BlackSmithing') and prof2_lv >= 550) then
+				isBlacksmithing = true
+			-- elseif (prof2_texture:find('Trade_Engineering') and prof2_lv >= 550) then
+				-- isEngineering = true
+			end
+		end
+	end
+
 	local sum = {};
 	sum["EnchantMissing"] = ""
+	sum["ExtraSocketMissing"] = ""
+	--sum["TinkerMissing"] = ""
 	sum.ArmorBonus = ClassArmorBonus[ucindex];
+	sum["ITEMSLOTFORCALC"] = INVSLOT_AVALIABLE
 	for i=INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do --zhengruiw02
 		local link = GetInventoryItemLink(unit, i);
 		if (link) and i ~= INVSLOT_BODY and i ~= INVSLOT_TABARD then
-			local _, _, quality, _, _, itemType, itemSubType = GetItemInfo(link); --TO DO: ADD UPGRADES
+			local _, _, quality, _, _, itemType, itemSubType, _, ItemEquipLoc = GetItemInfo(link); --TO DO: ADD UPGRADES
 			local iLevel = ISP:GetUpgradeLevel(link)
 			--[[# 2 - Uncommon # 3 - Rare # 4 - Epic # 5 - Legendary # 7 Account]]
 			if(quality >=2 and quality <=7) then
@@ -491,7 +565,6 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 				sum["ITEMLEVEL"..quality] = (sum["ITEMLEVEL"..quality] or 0) + iLevel;
 			end
 			if iLevel then
-				sum["ITEMCOUNT"] = (sum["ITEMCOUNT"] or 0) + 1;
 				sum["ITEMLEVEL"] = (sum["ITEMLEVEL"] or 0) + iLevel
 			end
 
@@ -510,6 +583,10 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 				sum.ArmorBonus = nil
 			end
 			
+			if i == INVSLOT_MAINHAND and ItemEquipLoc ~= "INVTYPE_2HWEAPON" then
+				sum["ITEMSLOTFORCALC"] = sum["ITEMSLOTFORCALC"] + 1
+			end
+			
 			for k,v in pairs(stats) do --newitemStat
 			--if i == INVSLOT_MAINHAND then print(k..":"..v) end
 				if(k~="itemType" and k~="link" and k~="Gems" and k~="Enchanted" and k~="Set") then
@@ -520,15 +597,19 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 			end
 ------			
 			tip:ClearLines() -- this is required or SetX won't work the second time its called
+			for i = 1,4 do
+				if _G["GearStatsSummaryTooltipTexture"..i] then
+					_G["GearStatsSummaryTooltipTexture"..i]:SetTexture("")-- = nil
+				end
+			end
 			tip:SetHyperlink(link)
-	
+			
 			stats["Gems"] = {}
 			stats["Gems"]["GemSlotCount"] = 0
 			for i = 1,4 do
 				local texture = _G["GearStatsSummaryTooltipTexture"..i]:GetTexture();
 				if ( texture ) then
 					--if string.find(texture, "gem") then
-						if debugmode then print(texture) end
 						AddGem(stats["Gems"], "GemSlotCount")
 						if string.find(texture, "EmptySocket") then
 							AddGem(stats["Gems"], "EmptyGemSlotCount")
@@ -562,7 +643,6 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 			end
 ------
 	
-	
 			if (stats["Gems"] ~= nil) then
 				if sum["Gems"] == nil then sum["Gems"] = {} end
 				for k,v in pairs(stats["Gems"]) do
@@ -574,15 +654,79 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 			for slot, shortname in next, RATING_SUMMARY_ENCHANTABLES do
 				if i == slot then
 					if sum["CanEnchant"] == nil then sum["CanEnchant"] = 0 end
-					sum["CanEnchant"] = sum["CanEnchant"] + 1
-					if ((i == INVSLOT_WAIST) and (stats["Gems"]["ExtraSlot"])) or stats["Enchanted"] then 
-						if sum["HasEnchant"] == nil then sum["HasEnchant"] = 0 end
+					if sum["HasEnchant"] == nil then sum["HasEnchant"] = 0 end
+					if (i ~= INVSLOT_FINGER1) and (i ~= INVSLOT_FINGER2) then
+						sum["CanEnchant"] = sum["CanEnchant"] + 1
+					end
+					if (i ~= INVSLOT_FINGER1) and (i ~= INVSLOT_FINGER2) and stats["Enchanted"] then 
 						sum["HasEnchant"] = sum["HasEnchant"] + 1
+					elseif ((i == INVSLOT_FINGER1) or (i == INVSLOT_FINGER2)) then
+						if (unit == "player") and isEnchanting then -- finger enchant
+							sum["CanEnchant"] = sum["CanEnchant"] + 1
+							if stats["Enchanted"] then
+								sum["HasEnchant"] = sum["HasEnchant"] + 1
+							else
+								sum["EnchantMissing"] = sum["EnchantMissing"]..shortname
+							end
+						else
+							if stats["Enchanted"] then
+								sum["CanEnchant"] = sum["CanEnchant"] + 1
+								sum["HasEnchant"] = sum["HasEnchant"] + 1
+							end
+						end
 					else
 						sum["EnchantMissing"] = sum["EnchantMissing"]..shortname
 					end
 				end
 			end
+			
+			for slot, shortname in next, RATING_SUMMARY_BLACKSMITH do
+				if i == slot then
+					if sum["CanExtraSocket"] == nil then sum["CanExtraSocket"] = 0 end
+					if sum["HasExtraSocket"] == nil then sum["HasExtraSocket"] = 0 end
+					if (i == INVSLOT_WAIST) then
+						sum["CanExtraSocket"] = sum["CanExtraSocket"] + 1
+						if not stats["Gems"]["ExtraSlot"] then
+							sum["ExtraSocketMissing"] = sum["ExtraSocketMissing"]..shortname
+						else
+							sum["HasExtraSocket"] = sum["HasExtraSocket"] + 1
+						end
+					elseif (unit == "player") and isBlacksmithing then
+						sum["CanExtraSocket"] = sum["CanExtraSocket"] + 1
+						if not stats["Gems"]["ExtraSlot"] then
+							sum["ExtraSocketMissing"] = sum["ExtraSocketMissing"]..shortname
+						else
+							sum["HasExtraSocket"] = sum["HasExtraSocket"] + 1
+						end
+					end
+				end
+			end
+			
+			-- if (i == INVSLOT_WAIST or i == INVSLOT_HAND or i == INVSLOT_BACK) then --and isEngineering then
+				-- for slot, shortname in next, RATING_SUMMARY_ENGINEERING do
+					-- if i == slot then
+						-- --tip:ClearLines() -- this is required or SetX won't work the second time its called
+						-- --tip:SetHyperlink(link)
+						-- local hasTinker
+						-- for i = 2, tip:NumLines() do
+							-- local text = tip[i]:GetText();
+							-- print(text)
+							-- --local r, g, b = tip[i]:GetTextColor()
+							-- if string.find(text, USE) then
+								-- hasTinker = true
+							-- end
+						-- end
+						-- if sum["CanTinker"] == nil then sum["CanTinker"] = 0 end
+						-- if sum["HasTinker"] == nil then sum["HasTinker"] = 0 end
+						-- sum["CanTinker"] = sum["CanTinker"] + 1
+						-- if hasTinker then
+							-- sum["HasTinker"] = sum["HasTinker"] + 1
+						-- else
+							-- sum["TinkerMissing"] = sum["TinkerMissing"]..shortname
+						-- end
+					-- end
+				-- end
+			-- end
 			
 			if (stats["Set"] ~= nil) then
 				for k,v in pairs(stats["Set"]) do

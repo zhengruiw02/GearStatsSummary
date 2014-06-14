@@ -1,5 +1,5 @@
-local _, ns = ...
-ns.APPerStr = {
+local lib = LibStub:GetLibrary("LibItemStatsPlus")
+lib.APPerStr = {
 	2, --WARRIOR
 	2, --PALADIN
 	1, --HUNTER
@@ -13,7 +13,7 @@ ns.APPerStr = {
 	1, --DRUID
 }
 
-ns.RAPPerAgi = {
+lib.RAPPerAgi = {
 	1,	--Warrior
 	0,	--Paladin
 	2,	--Hunter
@@ -27,7 +27,7 @@ ns.RAPPerAgi = {
 	0,	--Druid
 }
 
-ns.APPerAgi = {
+lib.APPerAgi = {
 	0, --WARRIOR
 	0, --PALADIN
 	1, --HUNTER
@@ -41,7 +41,7 @@ ns.APPerAgi = {
 	0, --DRUID
 }
 
-ns.SPPerInt = {
+lib.SPPerInt = {
 	0, --WARRIOR
 	0, --PALADIN
 	0, --HUNTER

@@ -1,5 +1,5 @@
-local _, ns = ...
-ns.CombatRatingsFromIndexToName = {
+local lib = LibStub:GetLibrary("LibItemStatsPlus")
+lib.CombatRatingsFromIndexToName = {
 	[1] = "ITEM_MOD_DODGE_RATING_SHORT",
 	[2] = "ITEM_MOD_PARRY_RATING_SHORT",
 	[3] = "ITEM_MOD_BLOCK_RATING_SHORT", --?
@@ -11,7 +11,7 @@ ns.CombatRatingsFromIndexToName = {
 	[9] = "ITEM_MOD_MASTERY_RATING_SHORT",
 	[10] = "ITEM_MOD_PVP_POWER_SHORT",
 }
-ns.CombatRatingsFromNameToIndex = {
+lib.CombatRatingsFromNameToIndex = {
 	["ITEM_MOD_DODGE_RATING_SHORT"] = 1,
 	["ITEM_MOD_PARRY_RATING_SHORT"] = 2,
 	["ITEM_MOD_BLOCK_RATING_SHORT"] = 3, --?
@@ -24,7 +24,7 @@ ns.CombatRatingsFromNameToIndex = {
 	["ITEM_MOD_PVP_POWER_SHORT"] = 10,
 }
 
-ns.CombatRatingsFromRatingIDToIndex = {
+lib.CombatRatingsFromRatingIDToIndex = {
 	["CR_WEAPON_SKILL"] = 0,
 	["CR_DEFENSE_SKILL"] = 0,
 	["CR_DODGE"] = 1,
@@ -54,7 +54,7 @@ ns.CombatRatingsFromRatingIDToIndex = {
 	["CR_PVP_POWER"] = 10,
 }
 
---[[ns.CombatRating10 = {
+--[[lib.CombatRating10 = {
 	0.796153128,
 	0.796153128,
 	0.265384376,
@@ -67,7 +67,7 @@ ns.CombatRatingsFromRatingIDToIndex = {
 	0.30631423,
 }
 
-ns.CombatRating60 = {
+lib.CombatRating60 = {
 	[1] = {0.3981, 0.7962},
 	[2] = {0.3981, 0.7962},
 	[3] = {0.1327, 0.2654},
@@ -81,7 +81,7 @@ ns.CombatRating60 = {
 }]]
 --DODGE PARRY BLOCK HIT CRIT RESILIENCE HASTE EXPERTISE MASTERY PVP_POWER
 --gtCombatRatings.dbc
-ns.CombatRatings = {
+lib.CombatRatings = {
 	[1] = {0.796153188,0.796153188,0.265384346,0.307691991,0.538461983,0.357366562,0.384615004,0.307691991,0.538461983,0.462361068},
 	[2] = {0.796153069,0.796153069,0.265384316,0.307691991,0.538461983,0.357366532,0.384615004,0.307691991,0.538461983,0.462361008},
 	[3] = {0.796153069,0.796153069,0.265384316,0.307691991,0.538461983,0.357366621,0.384615004,0.307691991,0.538461983,0.462361127},
