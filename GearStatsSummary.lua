@@ -554,6 +554,7 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 	--sum["TinkerMissing"] = ""
 	sum.ArmorBonus = ClassArmorBonus[ucindex];
 	sum["ITEMSLOTFORCALC"] = INVSLOT_AVALIABLE
+	local not2hand
 	for i=INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do --zhengruiw02
 		local link = GetInventoryItemLink(unit, i);
 		if (link) and i ~= INVSLOT_BODY and i ~= INVSLOT_TABARD then
@@ -583,8 +584,9 @@ function GearStatsSummary_Sum(inspecting, tipUnit)
 				sum.ArmorBonus = nil
 			end
 			
-			if i == INVSLOT_MAINHAND and ItemEquipLoc ~= "INVTYPE_2HWEAPON" then
+			if ((i == INVSLOT_OFFHAND) or (i == INVSLOT_MAINHAND and ItemEquipLoc ~= "INVTYPE_2HWEAPON")) and not not2hand then
 				sum["ITEMSLOTFORCALC"] = sum["ITEMSLOTFORCALC"] + 1
+				not2hand = true
 			end
 			
 			for k,v in pairs(stats) do --newitemStat
